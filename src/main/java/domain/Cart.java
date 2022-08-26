@@ -1,26 +1,24 @@
 package domain;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Cart {
 
-    List<Product> products;
+    private Map<Product,Integer> products;
 
     public Cart() {
-        products = new ArrayList<>();
+        products = new HashMap<>();
     }
 
-    public List<Product> getProducts() {
+    public Map<Product, Integer> getProducts() {
         return products;
     }
 
-    public void setProducts(List<Product> products) {
-        this.products = products;
-    }
-
-    public void add(Product product) {
-        products.add(product);
+    public void add(Product product,int quantity) {
+        products.put(product,quantity);
     }
 
 }
