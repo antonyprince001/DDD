@@ -1,0 +1,294 @@
+Index: src/main/java/domain/Cart.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/domain/Cart.java b/src/main/java/domain/Cart.java
+--- a/src/main/java/domain/Cart.java	(revision 3a020448d982c272f68137dbe027f014cec2baff)
++++ b/src/main/java/domain/Cart.java	(date 1661514713814)
+@@ -1,24 +1,31 @@
+ package domain;
+ 
+ import java.util.ArrayList;
+-import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.List;
+-import java.util.Map;
++import java.util.Set;
+ 
+ public class Cart {
+ 
+-    private Map<Product,Integer> products;
++    private List<Item> items = new ArrayList<>();
++    private Set<String> removedItems = new HashSet<>();
++
++    public void add(Item item) {
++        items.add(item);
++        items.remove(item.getProduct().getName());
++    }
+ 
+-    public Cart() {
+-        products = new HashMap<>();
++    public List<Item> getItems() {
++        return items;
+     }
+ 
+-    public Map<Product, Integer> getProducts() {
+-        return products;
++    public void removeItem(Item item){
++        items.remove(item);
++        removedItems.add(item.getProduct().getName());
+     }
+ 
+-    public void add(Product product,int quantity) {
+-        products.put(product,quantity);
++    public Set<String> getRemovedItems(){
++        return removedItems;
+     }
+ 
+ }
+Index: src/main/java/domain/Product.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/domain/Product.java b/src/main/java/domain/Product.java
+--- a/src/main/java/domain/Product.java	(revision 3a020448d982c272f68137dbe027f014cec2baff)
++++ b/src/main/java/domain/Product.java	(date 1661517948387)
+@@ -1,18 +1,40 @@
+ package domain;
+ 
++import java.util.Objects;
++
+ public class Product {
+ 
+     private String name;
+ 
++    private Price price;
++
+     public Product(String name) {
+         this.name = name;
+     }
++
++    public Product(String name, Price price) {
++        this.name = name;
++        this.price = price;
++    }
++
++    public Price getPrice() {
++        return price;
++    }
+ 
+     public String getName() {
+         return name;
+     }
+ 
+-    public void setName(String name) {
+-        this.name = name;
++    @Override
++    public boolean equals(Object o) {
++        if (this == o) return true;
++        if (o == null || getClass() != o.getClass()) return false;
++        Product product = (Product) o;
++        return getName().equals(product.getName());
++    }
++
++    @Override
++    public int hashCode() {
++        return Objects.hash(getName());
+     }
+ }
+Index: src/main/java/domain/Price.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/domain/Price.java b/src/main/java/domain/Price.java
+new file mode 100644
+--- /dev/null	(date 1661517769007)
++++ b/src/main/java/domain/Price.java	(date 1661517769007)
+@@ -0,0 +1,25 @@
++package domain;
++
++import java.util.Currency;
++
++public class Price {
++
++    private Float amount;
++    private Currency currency;
++
++    public Price(Float amount, Currency currency) {
++        this.amount = amount;
++        this.currency = currency;
++    }
++
++    public Float getAmount() {
++        return amount;
++    }
++
++    public Currency getCurrency() {
++        return currency;
++    }
++}
++
++
++
+Index: src/test/java/domain/CartTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/domain/CartTest.java b/src/test/java/domain/CartTest.java
+--- a/src/test/java/domain/CartTest.java	(revision 3a020448d982c272f68137dbe027f014cec2baff)
++++ b/src/test/java/domain/CartTest.java	(date 1661518029899)
+@@ -3,6 +3,7 @@
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ 
++import java.util.Currency;
+ import java.util.List;
+ import java.util.Map;
+ 
+@@ -19,32 +20,85 @@
+     @Test
+     void shouldAddIPadProToCart() {
+         Product iPadPro = new Product("IPad Pro");
++        Item item = new Item(iPadPro,1);
++        cart.add(item);
++        List<Item> items = cart.getItems();
+ 
+-        cart.add(iPadPro,1);
+-        Map<Product,Integer> products = cart.getProducts();
+-
+-        assertTrue(products.containsKey(iPadPro));
++        assertEquals(items.get(0),item);
+     }
+ 
+     @Test
+     void shouldAddHeroInkPenToCart() {
+         Product heroInkPen = new Product("Hero Ink Pen");
++        Item item = new Item(heroInkPen,1);
+ 
+-        cart.add(heroInkPen,1);
+-        Map<Product,Integer> products = cart.getProducts();
++        cart.add(item);
++        List<Item> items = cart.getItems();
+ 
+-        assertTrue(products.containsKey(heroInkPen));
++        assertEquals(items.get(0),item);
+     }
+ 
+     @Test
+     void shouldAddTwoGMCricketBatToCart() {
+         Product gMCricketBat = new Product("GM Cricket Bat");
++        Item item = new Item(gMCricketBat,1);
++
++        cart.add(item);
++        List<Item> items = cart.getItems();
++
++        assertEquals(items.get(0),item);
++
++    }
++
++    @Test
++    void shouldRemoveItemFromCart() {
++        Product iPadPro = new Product("IPad Pro");
++        Item item = new Item(iPadPro,1);
++        cart.add(item);
++        List<Item> items = cart.getItems();
++        cart.removeItem(item);
++
++        assertTrue(items.isEmpty());
++    }
++
++    @Test
++    void shouldReturnRemovedItemsFromCart() {
++        Product iPadPro = new Product("IPad Pro");
++        Item iPadProItem = new Item(iPadPro,1);
++        cart.add(iPadProItem);
++
++        Product gMCricketBat = new Product("GM Cricket Bat");
++        Item gMCricketBatItem = new Item(gMCricketBat,1);
++        cart.add(gMCricketBatItem);
++
++        cart.removeItem(iPadProItem);
++
++        assertTrue(cart.getRemovedItems().contains(iPadPro.getName()));
++
++    }
+ 
+-        cart.add(gMCricketBat,2);
+-        Map<Product,Integer> products = cart.getProducts();
++    @Test
++    void shouldNotBeEqualWhenCartHaveSameItems() {
++        Product iPadPro = new Product("IPad Pro");
++        Item iPadProItem = new Item(iPadPro,1);
++        cart.add(iPadProItem);
+ 
+-        assertTrue(products.containsKey(gMCricketBat));
+-        assertEquals(products.get(gMCricketBat),2);
++        Cart newCart = new Cart();
++        newCart.add(iPadProItem);
++
++        assertNotEquals(cart,newCart);
++    }
++
++
++    @Test
++    void shouldAddItemWithPriceToCart() {
++        Price price = new Price(120.0f, Currency.getInstance("USD"));
++        Product iPadPro = new Product("IPad Pro", price);
++        Item iPadProItem = new Item(iPadPro,1);
++        cart.add(iPadProItem);
++
++        assertEquals(cart.getItems().get(0),iPadProItem);
++        assertEquals(cart.getItems().get(0).getProduct().getPrice(),price);
+ 
+     }
+ }
+\ No newline at end of file
+Index: src/main/java/domain/Item.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/domain/Item.java b/src/main/java/domain/Item.java
+new file mode 100644
+--- /dev/null	(date 1661515139166)
++++ b/src/main/java/domain/Item.java	(date 1661515139166)
+@@ -0,0 +1,35 @@
++package domain;
++
++import java.util.Objects;
++
++public class Item {
++
++    private Product product;
++    private int quantity;
++
++    public Item(Product product, int quantity) {
++        this.product = product;
++        this.quantity = quantity;
++    }
++
++    public Product getProduct() {
++        return product;
++    }
++
++    public int getQuantity() {
++        return quantity;
++    }
++
++    @Override
++    public boolean equals(Object o) {
++        if (this == o) return true;
++        if (o == null || getClass() != o.getClass()) return false;
++        Item item = (Item) o;
++        return getQuantity() == item.getQuantity() && getProduct().equals(item.getProduct());
++    }
++
++    @Override
++    public int hashCode() {
++        return Objects.hash(getProduct(), getQuantity());
++    }
++}
